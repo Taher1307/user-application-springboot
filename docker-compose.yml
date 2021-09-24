@@ -1,0 +1,40 @@
+version: '3'
+services:
+  mariadb:
+    image: mariadb
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=userApplication
+
+  flyway:
+    image: flyway/flyway
+    command: -url=jdbc:mariadb://mariadb:3306/userApplication -schemas=userApplication -user=root -password=root -connectRetries=03 migrate
+    volumes:
+      - ./src/main/java/com/example/userapplication/db/migration:/flyway/sql
+    depends_on:
+      - mariadb
+
+  userApplication:
+    image: IMAGE_REPO/IMAGE_NAME:TAG
+    ports:
+      - "8080:8080"
+    environment:
+      - spring.datasource=mariadb
+      - spring.datasource.url=jdbc:mariadb://mariadb:3306/userApplication?useSSL=false
+      - spring.datasource.username=root
+      - spring.datasource.password=root
+      - spring.datasource.driver-class-name=org.mariadb.jdbc.Driver
+      - spring.jpa.hibernate.ddl-auto=update
+      - spring.mail.host=smtp.gmail.com
+      - spring.mail.port=587
+      - spring.mail.properties.mail.smtp.starttls.enable=true
+      - spring.mail.username=YOUR_EMAIL
+      - spring.mail.password=YOUR_MAIL_APP_PASSWORD
+      - spring.mail.properties.mail.smtp.auth=true
+      - jwt.secret=testapplication
+    depends_on:
+      - mariadb
+      - flyway
